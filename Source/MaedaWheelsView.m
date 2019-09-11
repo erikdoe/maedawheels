@@ -186,13 +186,11 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
 //  STANDARD VIEW OVERRIDES
 //--------------------------------------------------------------------------------------------------
 
-- (void)drawRect:(NSRect)rects
+- (void)drawRect:(NSRect)rect
 {
-    //NSLog(@"[%@ %@]", NSStringFromClass(isa), NSStringFromSelector(_cmd));
     [canvasColor set];
-    NSRectFill(rects);
-    [self recalcSpeeds];
-    [self animateOneFrame];
+    NSRectFill(rect);
+    [self drawFrame];
 }
 
 
@@ -213,7 +211,7 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
 
 
 //--------------------------------------------------------------------------------------------------
-//	ANIMATION
+//	SCREEN SAVER INTERFACE
 //--------------------------------------------------------------------------------------------------
 
 - (NSTimeInterval)animationTimeInterval
@@ -222,15 +220,31 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
 }
 
 
+- (void)startAnimation
+{
+    [super startAnimation];
+    [self recalcSpeeds];
+}
+
+
 - (void)animateOneFrame
 {
-    NSBezierPath	*circlePath, *discPath;
-    int				xi, yi;
-    NSRect			bounds;
-    float			llx, lly, wrllx, wrlly, dcx, dcy, dr, wrs, displaySize;
-    float			d1r, d2r, distance, slowdown;
-    float 			a1, a2, a3, a4;
-    //NSDate		*s, *e;
+    [self setNeedsDisplay:YES];
+}
+
+
+//--------------------------------------------------------------------------------------------------
+//    ANIMATION
+//--------------------------------------------------------------------------------------------------
+
+- (void)drawFrame
+{
+    NSBezierPath    *circlePath, *discPath;
+    int                xi, yi;
+    NSRect            bounds;
+    float            llx, lly, wrllx, wrlly, dcx, dcy, dr, wrs, displaySize;
+    float            d1r, d2r, distance, slowdown;
+    float             a1, a2, a3, a4;
     
     [[self window] disableFlushWindow];
     
@@ -241,14 +255,12 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
     wrs = displaySize / wheelArraySize;
     dr = wrs * WHEEL_RADIUS;
     
-    //s = [NSDate date];
-
     for(xi = 0; xi < wheelArraySize; xi++)
         for(yi = 0; yi < wheelArraySize; yi++)
-            {
+        {
             d1r = disc1Rotations[(yi * wheelArraySize) + xi];
             d2r = disc2Rotations[(yi * wheelArraySize) + xi];
-
+            
             distance = (abs(xi - wheelArraySize/2) + (float)abs(yi - wheelArraySize/2));
             slowdown = (distance / wheelArraySize) * (1.0 - CORNERSPEED_DISC1);
             d1r = fmod(d1r + disc1Speed * (1.0 - slowdown), 360.0);
@@ -269,7 +281,7 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
             [circlePath setLineWidth:[self isPreview] ? 0.5 : 1.5];
             [innerColor set];
             [circlePath fill];
- 
+            
             a1 = d2r;  a2 = a1 + 90;  a3 = a2 + 180;  a4 = a3 - 90;
             discPath = [NSBezierPath bezierPath];
             [discPath moveToPoint:NSMakePoint(dcx + cos(a1*M_PI/180) * dr, dcy + sin(a1*M_PI/180) * dr)];
@@ -285,7 +297,7 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
             [discPath closePath];
             [disc2Color set];
             [discPath fill];
-        
+            
             a1 = d1r;  a2 = a1 + 90;  a3 = a2 + 180;  a4 = a3 - 90;
             discPath = [NSBezierPath bezierPath];
             [discPath moveToPoint:NSMakePoint(dcx + cos(a1*M_PI/180) * dr, dcy + sin(a1*M_PI/180) * dr)];
@@ -301,15 +313,10 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
             [discPath closePath];
             [disc1Color set];
             [discPath fill];
-
+            
             [disc1Color set];
             [circlePath stroke];
-            }
-
-    //e = [NSDate date];
-    //NSLog(@"d2t = %g", [e timeIntervalSinceDate:s]);
-
-    [[self window] enableFlushWindow];
+        }
 }
 
 
