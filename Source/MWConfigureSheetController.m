@@ -81,13 +81,13 @@
     [canvasSizeField setStringValue:[NSString stringWithFormat:@"(%.0f%%)", (float)intValue / 8.0 * 100]];
 
     colorData = [defaults objectForKey:MWCanvasColorDefaultsKey];
-    [canvasColorWell setColor:[NSUnarchiver unarchiveObjectWithData:colorData]];
+    [canvasColorWell setColor:[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL]];
 
     colorData = [defaults objectForKey:MWDisc2ColorDefaultsKey];
-    [disc2ColorWell setColor:[NSUnarchiver unarchiveObjectWithData:colorData]];
+    [disc2ColorWell setColor:[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL]];
 
     colorData = [defaults objectForKey:MWInnerColorDefaultsKey];
-    [innerColorWell setColor:[NSUnarchiver unarchiveObjectWithData:colorData]];
+    [innerColorWell setColor:[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL]];
 }
 
 
@@ -108,14 +108,17 @@
     [defaults setInteger:intValue forKey:MWCanvasSizeDefaultsKey];
     [canvasSizeField setStringValue:[NSString stringWithFormat:@"(%.0f%%)", (float)intValue / 8.0 * 100]];
     
-    colorData = [NSArchiver archivedDataWithRootObject:[canvasColorWell color]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[canvasColorWell color] requiringSecureCoding:NO error:NULL];
     [defaults setObject:colorData forKey:MWCanvasColorDefaultsKey];
 
-    colorData = [NSArchiver archivedDataWithRootObject:[disc2ColorWell color]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[disc2ColorWell color] requiringSecureCoding:NO error:NULL];
     [defaults setObject:colorData forKey:MWDisc2ColorDefaultsKey];
 
-    colorData = [NSArchiver archivedDataWithRootObject:[innerColorWell color]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[innerColorWell color] requiringSecureCoding:NO error:NULL];
     [defaults setObject:colorData forKey:MWInnerColorDefaultsKey];
+
+    // Manual synchornisation seems to be required now.
+    [defaults synchronize];
 
     // This seems to be broken in the ScreenSaverDefaults, so we send it ourselves...
     [[NSNotificationCenter defaultCenter] postNotificationName:NSUserDefaultsDidChangeNotification object:defaults];

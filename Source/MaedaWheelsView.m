@@ -19,10 +19,10 @@ NSString *MWDefaultsIdentifier = nil;
 
 NSString *MWWheelCountDefaultsKey = @"WheelCount";
 NSString *MWCanvasSizeDefaultsKey = @"CanvasSize";
-NSString *MWCanvasColorDefaultsKey = @"CanvasColor";
-NSString *MWDisc1ColorDefaultsKey = @"Disc1Color";
-NSString *MWDisc2ColorDefaultsKey = @"Disc2Color";
-NSString *MWInnerColorDefaultsKey = @"InnerColor";
+NSString *MWCanvasColorDefaultsKey = @"CanvasColorKeyed";
+NSString *MWDisc1ColorDefaultsKey = @"Disc1ColorKeyed";
+NSString *MWDisc2ColorDefaultsKey = @"Disc2ColorKeyed";
+NSString *MWInnerColorDefaultsKey = @"InnerColorKeyed";
 
 
 //--------------------------------------------------------------------------------------------------
@@ -60,20 +60,20 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
     NSUserDefaults 		*defaults;
     NSMutableDictionary	*factorySettings;
     NSData				*colorData;
-    
+
     MWDefaultsIdentifier = [[NSBundle bundleForClass:self] bundleIdentifier];
     defaults = [ScreenSaverDefaults defaultsForModuleWithName:MWDefaultsIdentifier];
     factorySettings = [NSMutableDictionary dictionary];
 
     [factorySettings setObject:[NSNumber numberWithInt:9] forKey:MWWheelCountDefaultsKey];
     [factorySettings setObject:[NSNumber numberWithInt:5] forKey:MWCanvasSizeDefaultsKey];
-    colorData = [NSArchiver archivedDataWithRootObject:[NSColor darkGrayColor]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[NSColor darkGrayColor] requiringSecureCoding:NO error:NULL];
     [factorySettings setObject:colorData forKey:MWCanvasColorDefaultsKey];
-    colorData = [NSArchiver archivedDataWithRootObject:[NSColor blackColor]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[NSColor blackColor] requiringSecureCoding:NO error:NULL];
     [factorySettings setObject:colorData forKey:MWDisc1ColorDefaultsKey];
-    colorData = [NSArchiver archivedDataWithRootObject:[NSColor colorWithCalibratedRed:0.667 green:0.2 blue:0.2 alpha:1]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[NSColor colorWithCalibratedRed:0.667 green:0.2 blue:0.2 alpha:1] requiringSecureCoding:NO error:NULL];
     [factorySettings setObject:colorData forKey:MWDisc2ColorDefaultsKey];
-    colorData = [NSArchiver archivedDataWithRootObject:[NSColor whiteColor]];
+    colorData = [NSKeyedArchiver archivedDataWithRootObject:[NSColor whiteColor] requiringSecureCoding:NO error:NULL];
     [factorySettings setObject:colorData forKey:MWInnerColorDefaultsKey];
     
     [defaults registerDefaults:factorySettings];
@@ -90,7 +90,6 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
 
     self = [super initWithFrame:frame isPreview:isPreview];
 
-    [self allocateGState];
     disc1Rotations = NSZoneMalloc(nil, 1);
     disc2Rotations = NSZoneMalloc(nil, 1);
     disc1Speed = disc2Speed = 0;
@@ -155,7 +154,6 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
     NSUserDefaults	*defaults;
     NSData			*colorData;
        
-    //NSLog(@"[%@ %@] notification = %@", NSStringFromClass(isa), NSStringFromSelector(_cmd), notification);
     defaults = [ScreenSaverDefaults defaultsForModuleWithName:MWDefaultsIdentifier];
 
     wheelArraySize = [defaults integerForKey:MWWheelCountDefaultsKey];
@@ -163,21 +161,17 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
     relativeDisplaySize = (float)[defaults integerForKey:MWCanvasSizeDefaultsKey] / 8.0;
         
     colorData = [defaults objectForKey:MWCanvasColorDefaultsKey];
-    NSAssert(colorData != nil, @"could not read canvas colour");
-    canvasColor = [NSUnarchiver unarchiveObjectWithData:colorData];    
+    canvasColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
 
     colorData = [defaults objectForKey:MWDisc1ColorDefaultsKey];
-    NSAssert(colorData != nil, @"could not read disc 1 colour");
-    disc1Color = [NSUnarchiver unarchiveObjectWithData:colorData];    
+    disc1Color = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
 
     colorData = [defaults objectForKey:MWDisc2ColorDefaultsKey];
-    NSAssert(colorData != nil, @"could not read disc 2 colour");
-    disc2Color = [NSUnarchiver unarchiveObjectWithData:colorData];    
+    disc2Color = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
 
     colorData = [defaults objectForKey:MWInnerColorDefaultsKey];
-    NSAssert(colorData != nil, @"could not read inner colour");
-    innerColor = [NSUnarchiver unarchiveObjectWithData:colorData];    
-        
+    innerColor = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorData error:NULL];
+
     [self setNeedsDisplay:YES];
 }
 
@@ -245,9 +239,7 @@ NSString *MWInnerColorDefaultsKey = @"InnerColor";
     float            llx, lly, wrllx, wrlly, dcx, dcy, dr, wrs, displaySize;
     float            d1r, d2r, distance, slowdown;
     float             a1, a2, a3, a4;
-    
-    [[self window] disableFlushWindow];
-    
+
     bounds = [self bounds];
     displaySize = MIN(bounds.size.width, bounds.size.height) * relativeDisplaySize;
     llx = (bounds.size.width - displaySize) / 2 + bounds.origin.x;
